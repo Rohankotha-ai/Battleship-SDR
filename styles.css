@@ -1,0 +1,2258 @@
+/* ============ Reset / base ============ */
+* { box-sizing: border-box; }
+
+:root {
+  --bg-0: #050b18;
+  --bg-1: #0a1628;
+  --bg-2: #0f1f3a;
+  --panel: rgba(15, 30, 55, 0.7);
+  --panel-border: rgba(96, 165, 250, 0.18);
+  --water: #13294a;
+  --water-light: #1c3a66;
+  --grid: rgba(96, 165, 250, 0.08);
+  --ink: #e6f0ff;
+  --ink-dim: #93a8c4;
+  --accent: #38bdf8;
+  --accent-2: #22d3ee;
+  --hit: #ef4444;
+  --hit-glow: #f87171;
+  --miss: #60a5fa;
+  --sunk: #b91c1c;
+  --ship: #475569;
+  --ship-edge: #64748b;
+  --gold: #fbbf24;
+  --good: #4ade80;
+  --bad: #f87171;
+}
+
+html, body { height: 100%; }
+
+body {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  margin: 0;
+  color: var(--ink);
+  background: #04060f;
+  min-height: 100vh;
+  padding: 32px 24px 48px;
+  overflow-x: hidden;
+}
+
+/* Icon button used for mute */
+.icon-btn {
+  background: rgba(15, 30, 55, 0.8);
+  border: 1px solid var(--panel-border);
+  color: var(--ink);
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.icon-btn:hover { border-color: var(--accent); background: rgba(56,189,248,0.1); }
+.icon-btn.muted { opacity: 0.5; }
+
+/* ============ Cinematic war-scene background ============ */
+.bg-sky, .bg-stars, .bg-glow, .bg-horizon, .bg-smoke, .bg-vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+.bg-sky    { z-index: -6; }
+.bg-stars  { z-index: -5; }
+.bg-glow   { z-index: -4; }
+.bg-horizon{ z-index: -3; }
+.bg-smoke  { z-index: -2; }
+.bg-vignette{ z-index: -1; }
+
+/* Sky: cinematic photographic backdrop — moody dark sea, layered with color graders */
+.bg-sky {
+  background:
+    /* warm horizon ember tint (lighter than before) */
+    radial-gradient(ellipse 80% 60% at 50% 110%, rgba(120,40,20,0.45) 0%, transparent 55%),
+    /* lighter dusk color grade — let more of the photo through */
+    linear-gradient(180deg,
+      rgba(4,6,15,0.45)  0%,
+      rgba(10,15,30,0.30) 30%,
+      rgba(28,18,20,0.20) 60%,
+      rgba(28,10,12,0.30) 100%),
+    /* actual photograph of an open stormy sea */
+    url("https://images.unsplash.com/photo-1551405780-03882d5a2ba7?auto=format&fit=crop&w=2200&q=75")
+      center/cover no-repeat fixed,
+    /* fallback gradient if the image fails */
+    linear-gradient(180deg, #0a1428, #2a1418);
+  filter: saturate(1.0) brightness(1.05) contrast(1.05);
+}
+
+/* Stars */
+.bg-stars {
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, rgba(255,255,255,0.7), transparent 60%),
+    radial-gradient(1px 1px at 28% 9%,  rgba(255,255,255,0.6), transparent 60%),
+    radial-gradient(1px 1px at 47% 22%, rgba(255,255,255,0.5), transparent 60%),
+    radial-gradient(1px 1px at 61% 6%,  rgba(255,255,255,0.7), transparent 60%),
+    radial-gradient(1px 1px at 73% 17%, rgba(255,255,255,0.5), transparent 60%),
+    radial-gradient(1px 1px at 88% 11%, rgba(255,255,255,0.6), transparent 60%),
+    radial-gradient(1px 1px at 22% 33%, rgba(255,255,255,0.3), transparent 60%),
+    radial-gradient(1px 1px at 55% 38%, rgba(255,255,255,0.35), transparent 60%),
+    radial-gradient(1px 1px at 82% 30%, rgba(255,255,255,0.3), transparent 60%);
+  opacity: 0.9;
+  animation: twinkle 5s ease-in-out infinite alternate;
+}
+@keyframes twinkle {
+  from { opacity: 0.6; }
+  to   { opacity: 1; }
+}
+
+/* Distant explosion glow on horizon */
+.bg-glow {
+  background:
+    radial-gradient(ellipse 30% 12% at 28% 78%, rgba(251, 146, 60, 0.55), transparent 60%),
+    radial-gradient(ellipse 20% 8%  at 60% 76%, rgba(252, 165, 90, 0.35), transparent 60%),
+    radial-gradient(ellipse 25% 10% at 78% 82%, rgba(220, 38, 38, 0.35), transparent 65%);
+  mix-blend-mode: screen;
+  animation: flicker 4.5s ease-in-out infinite alternate;
+}
+@keyframes flicker {
+  0%   { opacity: 0.75; }
+  40%  { opacity: 1; }
+  55%  { opacity: 0.7; }
+  100% { opacity: 0.9; }
+}
+
+/* Ship silhouettes anchored to the horizon */
+.bg-horizon {
+  top: auto;
+  bottom: 0;
+  height: 28vh;
+  min-height: 180px;
+}
+.bg-horizon svg { width: 100%; height: 100%; }
+
+/* Smoke columns */
+.bg-smoke { overflow: hidden; }
+.smoke {
+  position: absolute;
+  bottom: 15vh;
+  width: 180px;
+  height: 320px;
+  background: radial-gradient(ellipse at center,
+    rgba(60, 40, 35, 0.6) 0%,
+    rgba(30, 20, 18, 0.35) 40%,
+    transparent 75%);
+  filter: blur(20px);
+  animation: smokeRise 18s ease-in-out infinite;
+}
+.smoke.s1 { left: 18%; animation-delay: 0s;  }
+.smoke.s2 { left: 50%; animation-delay: -6s; width: 240px; height: 400px; }
+.smoke.s3 { left: 78%; animation-delay: -12s; }
+@keyframes smokeRise {
+  0%   { transform: translateY(20px) scale(0.9); opacity: 0; }
+  20%  { opacity: 0.8; }
+  100% { transform: translateY(-260px) scale(1.4); opacity: 0; }
+}
+
+/* Vignette tightens focus on the play area */
+.bg-vignette {
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 40%, transparent 0%, rgba(0,0,0,0.55) 90%);
+}
+
+/* ============ Header ============ */
+header {
+  max-width: 1280px;
+  margin: 0 auto 28px;
+}
+
+.title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+header h1 {
+  font-family: "Orbitron", sans-serif;
+  margin: 0;
+  font-size: 2.4rem;
+  font-weight: 700;
+  letter-spacing: 8px;
+  background: linear-gradient(180deg, #e0f2fe, #38bdf8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 40px rgba(56,189,248,0.25);
+}
+
+.subtitle {
+  font-size: 0.8rem;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.hud {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.hud-card {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  padding: 8px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 80px;
+  backdrop-filter: blur(8px);
+}
+
+.hud-label {
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.hud-value {
+  font-family: "Orbitron", sans-serif;
+  font-size: 1.15rem;
+  color: var(--accent);
+  margin-top: 2px;
+}
+
+#resetBtn {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #062032;
+  border: none;
+  padding: 0 22px;
+  border-radius: 10px;
+  font-family: "Inter", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 6px 20px rgba(56,189,248,0.35);
+}
+#resetBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(56,189,248,0.5);
+}
+#resetBtn:active { transform: translateY(0); }
+
+#status {
+  margin: 0;
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--ink-dim);
+  min-height: 1.4em;
+}
+#status .accent { color: var(--accent); font-weight: 600; }
+
+/* ============ Setup panel ============ */
+.setup-panel {
+  max-width: 1280px;
+  margin: 0 auto 22px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  padding: 18px 22px;
+  backdrop-filter: blur(10px);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  align-items: center;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.35);
+}
+.setup-panel.hidden { display: none; }
+
+.setup-left h3 {
+  margin: 0 0 6px;
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.95rem;
+  letter-spacing: 3px;
+  color: var(--accent);
+}
+.setup-hint {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  color: var(--ink-dim);
+}
+.setup-hint kbd {
+  background: rgba(56,189,248,0.18);
+  border: 1px solid rgba(56,189,248,0.4);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-family: "Orbitron", monospace;
+  font-size: 0.75rem;
+  color: var(--accent);
+}
+
+.ship-picker {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ship-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(8, 18, 35, 0.6);
+  border: 1px solid rgba(96,165,250,0.15);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 0.82rem;
+}
+.ship-chip:hover { border-color: var(--accent); transform: translateY(-1px); }
+.ship-chip.selected {
+  background: rgba(56,189,248,0.18);
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(56,189,248,0.4);
+}
+.ship-chip.placed {
+  opacity: 0.4;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+.ship-chip-icon {
+  width: 60px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+}
+.ship-chip-icon svg { width: 100%; height: 100%; }
+
+.setup-right {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;
+  min-width: 180px;
+}
+.orient-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ghost-btn {
+  background: rgba(15, 30, 55, 0.8);
+  border: 1px solid var(--panel-border);
+  color: var(--ink);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-family: "Inter", sans-serif;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+}
+.ghost-btn:hover {
+  border-color: var(--accent);
+  background: rgba(56,189,248,0.1);
+}
+.primary-btn {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #062032;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-family: "Inter", sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, opacity 0.2s;
+  box-shadow: 0 6px 20px rgba(56,189,248,0.35);
+}
+.primary-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(56,189,248,0.5);
+}
+.primary-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+@media (max-width: 800px) {
+  .setup-panel { grid-template-columns: 1fr; }
+}
+
+/* ============ Main layout ============ */
+main {
+  display: grid;
+  grid-template-columns: 1fr 1fr 300px;
+  gap: 22px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
+}
+
+@media (max-width: 1080px) {
+  main { grid-template-columns: 1fr 1fr; }
+  .sidebar { grid-column: span 2; flex-direction: row; }
+  .sidebar > * { flex: 1; }
+}
+@media (max-width: 720px) {
+  main { grid-template-columns: 1fr; }
+  .sidebar { grid-column: span 1; flex-direction: column; }
+}
+
+/* Enemy board lock overlay during setup */
+.enemy-lock {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 11, 24, 0.7);
+  backdrop-filter: blur(3px);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  transition: opacity 0.35s;
+}
+.enemy-lock.hidden { opacity: 0; pointer-events: none; }
+.lock-text {
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.85rem;
+  letter-spacing: 2px;
+  text-align: center;
+  color: var(--ink-dim);
+  line-height: 1.8;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  padding: 18px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.35);
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 14px;
+}
+
+.panel-header h2 {
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 3px;
+  margin: 0;
+  color: var(--ink);
+  text-transform: uppercase;
+}
+
+.panel-sub {
+  font-size: 0.75rem;
+  color: var(--ink-dim);
+  letter-spacing: 1px;
+}
+
+/* ============ Board ============ */
+.board-frame {
+  display: inline-block;
+  background: linear-gradient(180deg, #0a1c33, #07111f);
+  border: 1px solid rgba(56,189,248,0.15);
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.coords-top, .coords-left {
+  display: grid;
+  color: var(--ink-dim);
+  font-size: 0.7rem;
+  font-family: "Orbitron", sans-serif;
+  user-select: none;
+}
+.coords-top {
+  grid-template-columns: 24px repeat(10, 34px);
+  gap: 2px;
+  margin-bottom: 4px;
+}
+.coords-top span { text-align: center; line-height: 20px; }
+
+.board-row { display: flex; }
+
+.coords-left {
+  grid-template-rows: repeat(10, 34px);
+  grid-template-columns: 24px;
+  gap: 2px;
+  margin-right: 4px;
+}
+.coords-left span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(10, 34px);
+  grid-template-rows: repeat(10, 34px);
+  gap: 2px;
+  background:
+    /* deep water vertical gradient */
+    linear-gradient(180deg, #08182f 0%, #0b2548 35%, #0a1d3a 70%, #050f1f 100%);
+  padding: 0;
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+}
+/* Animated wave shimmer on the water surface */
+.board::before, .board::after {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  z-index: 0;
+  pointer-events: none;
+}
+.board::before {
+  background:
+    radial-gradient(ellipse 60% 20% at 25% 30%, rgba(96,165,250,0.10), transparent 70%),
+    radial-gradient(ellipse 50% 15% at 70% 60%, rgba(34,211,238,0.08), transparent 70%),
+    radial-gradient(ellipse 40% 12% at 45% 85%, rgba(125,211,252,0.07), transparent 70%);
+  animation: waterShimmer 9s ease-in-out infinite alternate;
+}
+.board::after {
+  background:
+    repeating-linear-gradient(115deg,
+      transparent 0,
+      transparent 16px,
+      rgba(125,211,252,0.04) 17px,
+      transparent 19px,
+      transparent 36px),
+    repeating-linear-gradient(75deg,
+      transparent 0,
+      transparent 22px,
+      rgba(56,189,248,0.035) 23px,
+      transparent 26px,
+      transparent 48px);
+  animation: waveDrift 22s linear infinite;
+  mix-blend-mode: screen;
+}
+@keyframes waterShimmer {
+  0%   { transform: translate(0,0) scale(1); opacity: 0.85; }
+  100% { transform: translate(20px,-12px) scale(1.05); opacity: 1; }
+}
+@keyframes waveDrift {
+  to { transform: translate(48px, 24px); }
+}
+.board > * { position: relative; z-index: 1; }
+.ship-layer { z-index: 2 !important; }
+
+.cell {
+  width: 34px;
+  height: 34px;
+  background: transparent;
+  border: 1px solid rgba(96,165,250,0.07);
+  border-radius: 4px;
+  cursor: default;
+  transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  position: relative;
+  overflow: hidden;
+}
+/* Hit / miss markers need to render above the ship sprite layer */
+.cell.hit, .cell.miss, .cell.sunk { z-index: 5; }
+
+/* Ships are rendered as SVG sprites in the .ship-layer overlay,
+   not via cell.ship styling. We leave cell.ship transparent. */
+.cell.ship { background: transparent; }
+
+/* Ship sprite overlay layer */
+.board-stack {
+  position: relative;
+  display: inline-block;
+}
+.ship-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.ship-sprite {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5));
+  transition: opacity 0.3s, filter 0.3s;
+}
+.ship-sprite svg { width: 100%; height: 100%; display: block; }
+.ship-sprite.sunk {
+  opacity: 0.55;
+  filter: grayscale(0.7) drop-shadow(0 2px 6px rgba(239,68,68,0.6));
+}
+.ship-sprite.hidden { display: none; }
+
+/* Preview ghost ship during setup */
+.preview-layer { z-index: 3; }
+.ship-sprite.preview { opacity: 0.55; }
+.ship-sprite.preview.valid svg { filter: drop-shadow(0 0 6px rgba(74,222,128,0.7)); }
+.ship-sprite.preview.invalid svg { filter: drop-shadow(0 0 6px rgba(248,113,113,0.8)); }
+.ship-sprite.preview.invalid { opacity: 0.4; }
+
+/* Hit / miss / sunk */
+.cell.miss {
+  background: radial-gradient(circle, rgba(96,165,250,0.25), transparent 70%), var(--water);
+}
+.cell.miss::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--miss);
+  box-shadow: 0 0 8px rgba(96,165,250,0.6);
+  animation: pop 0.3s ease-out;
+}
+.cell.hit {
+  background:
+    radial-gradient(circle, var(--hit-glow), var(--hit) 60%, #7f1d1d);
+  box-shadow: 0 0 12px rgba(239,68,68,0.6), inset 0 0 8px rgba(0,0,0,0.4);
+  animation: shake 0.3s;
+}
+.cell.hit::after {
+  content: "✕";
+  color: #fff;
+  font-weight: 700;
+  font-size: 16px;
+  text-shadow: 0 0 4px rgba(0,0,0,0.6);
+}
+.cell.sunk {
+  background:
+    radial-gradient(circle, #ef4444, var(--sunk) 60%, #450a0a);
+  box-shadow: 0 0 16px rgba(239,68,68,0.7), inset 0 0 8px rgba(0,0,0,0.6);
+}
+.cell.sunk::after {
+  content: "✕";
+  color: #fee2e2;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+/* Enemy board interactivity */
+#computerBoard .cell:not(.hit):not(.miss):not(.sunk) {
+  cursor: crosshair;
+}
+#computerBoard .cell:not(.hit):not(.miss):not(.sunk):hover {
+  background: rgba(56,189,248,0.25);
+  box-shadow: inset 0 0 0 1px var(--accent), 0 0 12px rgba(56,189,248,0.4);
+  transform: scale(1.05);
+}
+/* Hide computer ships pre-hit */
+#computerBoard .cell.ship:not(.hit):not(.sunk) {
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.02), rgba(0,0,0,0.15)),
+    var(--water-light);
+  border-color: rgba(96,165,250,0.06);
+  border-radius: 4px;
+}
+
+/* Last-shot marker */
+.cell.last {
+  outline: 2px solid var(--gold);
+  outline-offset: -2px;
+}
+
+/* Disabled state when not player's turn */
+.board.disabled { pointer-events: none; opacity: 0.95; }
+
+@keyframes pop {
+  0% { transform: scale(0); }
+  60% { transform: scale(1.4); }
+  100% { transform: scale(1); }
+}
+@keyframes shake {
+  0%,100% { transform: translate(0,0); }
+  25% { transform: translate(-2px, 1px); }
+  50% { transform: translate(2px, -1px); }
+  75% { transform: translate(-1px, 2px); }
+}
+
+/* ============ Fleet roster ============ */
+.fleet-roster {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ship-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 10px;
+  background: rgba(8, 18, 35, 0.6);
+  border: 1px solid rgba(96,165,250,0.08);
+  border-radius: 8px;
+  font-size: 0.82rem;
+  transition: opacity 0.3s;
+}
+.ship-row.sunk {
+  opacity: 0.45;
+  text-decoration: line-through;
+  border-color: rgba(239,68,68,0.3);
+}
+.ship-name { color: var(--ink); letter-spacing: 0.5px; }
+.ship-pips { display: flex; gap: 3px; }
+.pip {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--ship);
+  border: 1px solid var(--ship-edge);
+}
+.pip.gone { background: var(--hit); border-color: var(--hit-glow); }
+
+/* ============ Chat panel ============ */
+.chat-panel { display: flex; flex-direction: column; }
+.pulse-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  background: var(--good);
+  border-radius: 50%;
+  margin-right: 4px;
+  box-shadow: 0 0 8px var(--good);
+  animation: pulse 1.6s ease-in-out infinite;
+  vertical-align: middle;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.chat {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 280px;
+  min-height: 120px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.chat::-webkit-scrollbar { width: 6px; }
+.chat::-webkit-scrollbar-thumb {
+  background: rgba(96,165,250,0.25); border-radius: 4px;
+}
+.chat li {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  animation: msgin 0.3s ease-out;
+}
+.chat-avatar {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #1e3a5f, #0a1628);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(248,113,113,0.5);
+  box-shadow: 0 0 10px rgba(239,68,68,0.35), inset 0 0 8px rgba(0,0,0,0.4);
+  overflow: hidden;
+}
+.chat-avatar svg { width: 100%; height: 100%; display: block; }
+.chat-bubble {
+  background: rgba(127, 29, 29, 0.35);
+  border: 1px solid rgba(248,113,113,0.25);
+  border-radius: 4px 12px 12px 12px;
+  padding: 7px 11px;
+  font-size: 0.85rem;
+  color: var(--ink);
+  line-height: 1.4;
+  max-width: 100%;
+  word-wrap: break-word;
+}
+.chat-bubble .who {
+  display: block;
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--hit-glow);
+  margin-bottom: 2px;
+}
+.chat li.typing .chat-bubble {
+  padding: 10px 14px;
+}
+.chat-typing {
+  display: inline-flex;
+  gap: 3px;
+}
+.chat-typing span {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--hit-glow);
+  animation: typedot 1s infinite ease-in-out;
+}
+.chat-typing span:nth-child(2) { animation-delay: 0.15s; }
+.chat-typing span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes typedot {
+  0%,80%,100% { opacity: 0.3; transform: translateY(0); }
+  40% { opacity: 1; transform: translateY(-3px); }
+}
+@keyframes msgin {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============ Battle log ============ */
+.log-panel { min-height: 200px; }
+.log {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 480px;
+  overflow-y: auto;
+  font-size: 0.82rem;
+  font-family: "Inter", monospace;
+}
+.log li {
+  padding: 5px 8px;
+  border-left: 2px solid transparent;
+  color: var(--ink-dim);
+  animation: slidein 0.25s ease-out;
+}
+.log li.you   { border-color: var(--accent); }
+.log li.enemy { border-color: var(--hit-glow); }
+.log li.sunk  { color: var(--gold); border-color: var(--gold); font-weight: 600; }
+.log li .tag {
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-right: 6px;
+}
+.log li.you   .tag { color: var(--accent); }
+.log li.enemy .tag { color: var(--hit-glow); }
+
+@keyframes slidein {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* Custom scrollbar */
+.log::-webkit-scrollbar { width: 6px; }
+.log::-webkit-scrollbar-thumb {
+  background: rgba(96,165,250,0.25); border-radius: 4px;
+}
+
+/* ============ Overlay (win/loss) ============ */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 11, 24, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  animation: fadein 0.3s ease-out;
+}
+.overlay.hidden { display: none; }
+
+.overlay-card {
+  background: linear-gradient(180deg, #0f1f3a, #0a1628);
+  border: 1px solid var(--panel-border);
+  border-radius: 18px;
+  padding: 40px 48px;
+  text-align: center;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+  max-width: 420px;
+}
+.overlay-card h2 {
+  font-family: "Orbitron", sans-serif;
+  font-size: 2rem;
+  letter-spacing: 4px;
+  margin: 0 0 12px;
+}
+.overlay-card h2.win  { color: var(--good); text-shadow: 0 0 30px rgba(74,222,128,0.5); }
+.overlay-card h2.lose { color: var(--bad);  text-shadow: 0 0 30px rgba(248,113,113,0.5); }
+.overlay-card p {
+  color: var(--ink-dim);
+  margin: 0 0 22px;
+  font-size: 0.95rem;
+}
+#overlayBtn {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #062032;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: transform 0.15s;
+}
+#overlayBtn:hover { transform: translateY(-2px); }
+
+@keyframes fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ============ Toasts (sunk-ship popups) ============ */
+.toasts {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+  max-width: 340px;
+}
+.toast {
+  background: linear-gradient(135deg, rgba(15, 30, 55, 0.96), rgba(10, 22, 40, 0.96));
+  border: 1px solid var(--panel-border);
+  border-left-width: 4px;
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  backdrop-filter: blur(10px);
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  pointer-events: auto;
+  animation: toastIn 0.4s cubic-bezier(.2,.9,.3,1.2), toastOut 0.4s ease-in forwards;
+  animation-delay: 0s, 4.6s;
+  min-width: 280px;
+}
+.toast.win  { border-left-color: var(--good); }
+.toast.lose { border-left-color: var(--bad);  }
+.toast-icon {
+  font-size: 1.8rem;
+  line-height: 1;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 8px currentColor);
+}
+.toast.win .toast-icon  { color: var(--good); }
+.toast.lose .toast-icon { color: var(--bad);  }
+.toast-body { flex: 1; min-width: 0; }
+.toast-title {
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+.toast.win  .toast-title { color: var(--good); }
+.toast.lose .toast-title { color: var(--bad);  }
+.toast-text {
+  color: var(--ink);
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+.toast-text strong { color: var(--accent); }
+.toast.lose .toast-text strong { color: var(--bad); }
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(40px) scale(0.9); }
+  to   { opacity: 1; transform: translateX(0)    scale(1);   }
+}
+@keyframes toastOut {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(40px); }
+}
+
+/* ============================================================
+   SCREEN STATE MACHINE
+   ============================================================ */
+body.screen-title header,
+body.screen-title #setupPanel,
+body.screen-title main,
+body.screen-title .toasts,
+body.screen-title .overlay { display: none !important; }
+
+body.screen-setup  #titleScreen,
+body.screen-battle #titleScreen { display: none !important; }
+
+body.screen-setup  #enemyPanel,
+body.screen-setup  .sidebar .log-panel { display: none; }
+
+body.screen-battle #setupPanel { display: none !important; }
+
+body.screen-setup main { grid-template-columns: 1fr 320px; }
+body.screen-setup .sidebar { grid-column: auto; flex-direction: column; }
+
+/* ============ TITLE SCREEN ============ */
+.title-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  animation: fadeIn 0.6s ease-out;
+}
+.title-hero {
+  position: absolute; inset: 0;
+  background-image: url("https://images.unsplash.com/photo-1518837695005-2083093ee35b?auto=format&fit=crop&w=2000&q=80");
+  background-size: cover;
+  background-position: center;
+  filter: saturate(0.7) brightness(0.5) contrast(1.15);
+  transform: scale(1.05);
+  animation: heroPan 32s ease-in-out infinite alternate;
+}
+@keyframes heroPan {
+  from { transform: scale(1.05) translate(-1%, -1%); }
+  to   { transform: scale(1.12) translate( 2%,  1%); }
+}
+.title-hero-overlay {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 60%, transparent 0%, rgba(4,6,15,0.8) 100%),
+    linear-gradient(180deg, rgba(4,6,15,0.6) 0%, rgba(4,6,15,0.3) 50%, rgba(4,6,15,0.85) 100%);
+}
+.title-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 40px 24px;
+  max-width: 720px;
+}
+.title-eyebrow {
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.85rem;
+  letter-spacing: 8px;
+  color: var(--accent);
+  text-shadow: 0 0 12px rgba(56,189,248,0.6);
+  margin-bottom: 20px;
+  animation: floatIn 0.9s 0.1s both;
+}
+.title-logo {
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: clamp(3rem, 10vw, 6.5rem);
+  line-height: 0.95;
+  margin: 0 0 8px;
+  letter-spacing: 6px;
+}
+.title-logo-line {
+  display: block;
+  background: linear-gradient(180deg, #f1f5f9 0%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 40px rgba(255,255,255,0.15);
+  animation: floatIn 1s 0.2s both;
+}
+.title-logo-accent {
+  background: linear-gradient(180deg, #fbbf24 10%, #b45309 95%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 50px rgba(251,191,36,0.4);
+  animation: floatIn 1s 0.35s both;
+}
+@keyframes floatIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.title-tagline {
+  color: var(--ink-dim);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  margin: 22px auto 36px;
+  max-width: 540px;
+  animation: floatIn 1s 0.5s both;
+}
+.title-start {
+  position: relative;
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: 4px;
+  color: #062032;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  border: none;
+  padding: 18px 44px;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow:
+    0 0 0 1px rgba(251,191,36,0.6),
+    0 10px 30px rgba(251,191,36,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.5);
+  transition: transform 0.2s, box-shadow 0.2s;
+  animation: floatIn 1s 0.7s both, pulseGlow 2.5s 1.6s ease-in-out infinite;
+  overflow: hidden;
+}
+.title-start:hover { transform: translateY(-3px) scale(1.03); }
+.title-start-inner { position: relative; z-index: 2; }
+.title-start-glow {
+  position: absolute; inset: 0;
+  background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.6) 50%, transparent 70%);
+  transform: translateX(-100%);
+  animation: sheen 3.5s ease-in-out infinite;
+}
+@keyframes sheen { 0%, 60% { transform: translateX(-100%); } 80%, 100% { transform: translateX(100%); } }
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(251,191,36,0.6), 0 10px 30px rgba(251,191,36,0.4), inset 0 1px 0 rgba(255,255,255,0.5); }
+  50%      { box-shadow: 0 0 0 1px rgba(251,191,36,0.9), 0 14px 50px rgba(251,191,36,0.7), inset 0 1px 0 rgba(255,255,255,0.5); }
+}
+.title-meta {
+  display: flex; justify-content: center;
+  gap: 28px; margin-top: 50px; flex-wrap: wrap;
+  animation: floatIn 1s 0.9s both;
+}
+.title-meta-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.title-meta-item .k {
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.65rem; letter-spacing: 3px;
+  color: var(--accent); opacity: 0.75;
+}
+.title-meta-item .v { font-size: 0.85rem; color: var(--ink); }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ============ REAL OCEAN OVERLAY (SVG turbulence) ============ */
+.board-stack { isolation: isolate; }
+.water-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  border-radius: 6px;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 70% 12% at 30% 22%, rgba(186, 230, 253, 0.18), transparent 70%),
+    radial-gradient(ellipse 55% 10% at 65% 70%, rgba(125, 211, 252, 0.12), transparent 70%);
+  mix-blend-mode: screen;
+}
+.water-overlay::before {
+  content: "";
+  position: absolute;
+  inset: -10%;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='420' height='420'><filter id='o'><feTurbulence type='fractalNoise' baseFrequency='0.014 0.024' numOctaves='3' seed='9'/><feColorMatrix values='0 0 0 0 0.30  0 0 0 0 0.60  0 0 0 0 0.90  0 0 0 0.55 -0.20'/></filter><rect width='100%25' height='100%25' filter='url(%23o)'/></svg>");
+  background-size: 420px 420px;
+  opacity: 0.55;
+  mix-blend-mode: screen;
+  animation: waterFlow 28s linear infinite;
+}
+.water-overlay::after {
+  content: "";
+  position: absolute;
+  inset: -10%;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320'><filter id='o2'><feTurbulence type='fractalNoise' baseFrequency='0.028 0.045' numOctaves='2' seed='3'/><feColorMatrix values='0 0 0 0 0.70  0 0 0 0 0.90  0 0 0 0 1.00  0 0 0 0.35 -0.30'/></filter><rect width='100%25' height='100%25' filter='url(%23o2)'/></svg>");
+  background-size: 320px 320px;
+  opacity: 0.45;
+  mix-blend-mode: screen;
+  animation: waterFlow2 19s linear infinite reverse;
+}
+@keyframes waterFlow  { to { background-position: 420px 220px; } }
+@keyframes waterFlow2 { to { background-position: -320px 180px; } }
+
+.ship-layer    { z-index: 3 !important; }
+.preview-layer { z-index: 4 !important; }
+.cell.hit,
+.cell.miss,
+.cell.sunk     { z-index: 6 !important; }
+.enemy-lock    { z-index: 20 !important; }
+
+/* ============ PROJECTILES & IMPACT EFFECTS ============ */
+.fx-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 55;
+  overflow: hidden;
+}
+.projectile {
+  position: absolute;
+  width: 14px; height: 14px;
+  margin-left: -7px; margin-top: -7px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fde68a 0%, #f59e0b 35%, #7c2d12 75%, #1c0a02 100%);
+  box-shadow:
+    0 0 12px rgba(251, 146, 60, 0.95),
+    0 0 30px rgba(248, 113, 113, 0.6),
+    0 0 50px rgba(248, 113, 113, 0.3);
+  will-change: transform;
+}
+.projectile-trail {
+  position: absolute;
+  width: 6px; height: 6px;
+  margin-left: -3px; margin-top: -3px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(254,215,170,0.9), rgba(251,146,60,0.3) 60%, transparent);
+  box-shadow: 0 0 8px rgba(251,146,60,0.7);
+  animation: trailFade 0.55s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes trailFade {
+  from { opacity: 0.9; transform: scale(1); }
+  to   { opacity: 0;   transform: scale(0.4); }
+}
+.muzzle-flash {
+  position: absolute;
+  width: 50px; height: 50px;
+  margin-left: -25px; margin-top: -25px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fffbe6 0%, #fbbf24 35%, transparent 70%);
+  animation: muzzleFlash 0.32s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes muzzleFlash {
+  from { transform: scale(0.4); opacity: 1; }
+  to   { transform: scale(1.7); opacity: 0; }
+}
+
+.impact-splash {
+  position: absolute;
+  width: 60px; height: 60px;
+  margin-left: -30px; margin-top: -30px;
+  pointer-events: none;
+}
+.impact-splash::before, .impact-splash::after {
+  content: "";
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  border: 3px solid rgba(186, 230, 253, 0.85);
+  animation: splashRing 0.7s ease-out forwards;
+}
+.impact-splash::after {
+  animation-delay: 0.18s;
+  border-color: rgba(125, 211, 252, 0.7);
+}
+@keyframes splashRing {
+  from { transform: scale(0.2); opacity: 1; }
+  to   { transform: scale(1.8); opacity: 0; }
+}
+
+.impact-explosion {
+  position: absolute;
+  width: 90px; height: 90px;
+  margin-left: -45px; margin-top: -45px;
+  pointer-events: none;
+}
+.impact-explosion .core {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fef3c7 0%, #fbbf24 22%, #f97316 48%, #b91c1c 75%, transparent 92%);
+  animation: explodeCore 0.6s ease-out forwards;
+}
+.impact-explosion .shock {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  border: 4px solid rgba(254, 215, 170, 0.85);
+  animation: explodeShock 0.75s ease-out forwards;
+}
+.impact-explosion .spark {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 3px; height: 18px;
+  margin-left: -1.5px;
+  background: linear-gradient(to top, transparent, #fde68a, transparent);
+  transform-origin: 50% 0;
+  animation: sparkFly 0.65s ease-out forwards;
+}
+@keyframes explodeCore  { from { transform: scale(0.2); opacity: 1; } to { transform: scale(1.4); opacity: 0; } }
+@keyframes explodeShock { from { transform: scale(0.3); opacity: 0.9; } to { transform: scale(2.4); opacity: 0; } }
+@keyframes sparkFly {
+  from { transform: translateY(0) scaleY(0.4); opacity: 1; }
+  to   { transform: translateY(-46px) scaleY(1); opacity: 0; }
+}
+
+@keyframes screenShake {
+  0%, 100% { transform: translate(0,0); }
+  20% { transform: translate(-4px, 2px); }
+  40% { transform: translate(3px, -3px); }
+  60% { transform: translate(-2px, 3px); }
+  80% { transform: translate(3px, 1px); }
+}
+body.shake { animation: screenShake 0.45s ease-in-out; }
+
+/* ============================================================
+   PREMIUM OVERRIDES — bring gameplay UI up to title-screen polish
+   ============================================================ */
+
+/* ---- Smooth screen entry ---- */
+body.screen-setup #setupPanel,
+body.screen-setup main,
+body.screen-battle main {
+  animation: screenIn 0.7s cubic-bezier(.2,.7,.2,1) both;
+}
+body.screen-setup main { animation-delay: 0.08s; }
+@keyframes screenIn {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Header: premium gold/steel composition ---- */
+header {
+  position: relative;
+  padding: 22px 28px 18px;
+  background:
+    linear-gradient(180deg, rgba(10,22,40,0.85), rgba(10,22,40,0.55));
+  border: 1px solid rgba(251,191,36,0.18);
+  border-radius: 18px;
+  backdrop-filter: blur(14px);
+  box-shadow:
+    0 12px 40px rgba(0,0,0,0.5),
+    inset 0 1px 0 rgba(255,255,255,0.05);
+  margin-bottom: 22px;
+}
+header::before {
+  /* gold scan-line underneath title */
+  content: "";
+  position: absolute;
+  left: 28px; right: 28px;
+  top: 78px;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(251,191,36,0.5) 20%,
+    rgba(251,191,36,0.9) 50%,
+    rgba(251,191,36,0.5) 80%,
+    transparent 100%);
+}
+header::after {
+  /* corner brackets */
+  content: "";
+  position: absolute;
+  inset: 10px;
+  border-radius: 14px;
+  pointer-events: none;
+  background:
+    linear-gradient(to right, rgba(251,191,36,0.6) 0, rgba(251,191,36,0.6) 18px, transparent 18px) top left/100% 1px no-repeat,
+    linear-gradient(to bottom, rgba(251,191,36,0.6) 0, rgba(251,191,36,0.6) 18px, transparent 18px) top left/1px 100% no-repeat,
+    linear-gradient(to left,  rgba(251,191,36,0.6) 0, rgba(251,191,36,0.6) 18px, transparent 18px) top right/100% 1px no-repeat,
+    linear-gradient(to bottom,rgba(251,191,36,0.6) 0, rgba(251,191,36,0.6) 18px, transparent 18px) top right/1px 100% no-repeat,
+    linear-gradient(to right, rgba(251,191,36,0.6) 0, rgba(251,191,36,0.6) 18px, transparent 18px) bottom left/100% 1px no-repeat,
+    linear-gradient(to top,   rgba(251,191,36,0.6) 0, rgba(251,191,36,0.6) 18px, transparent 18px) bottom left/1px 100% no-repeat,
+    linear-gradient(to left,  rgba(251,191,36,0.6) 0, rgba(251,191,36,0.6) 18px, transparent 18px) bottom right/100% 1px no-repeat,
+    linear-gradient(to top,   rgba(251,191,36,0.6) 0, rgba(251,191,36,0.6) 18px, transparent 18px) bottom right/1px 100% no-repeat;
+}
+
+header h1 {
+  font-size: 2.6rem;
+  letter-spacing: 12px;
+  background: linear-gradient(180deg, #f1f5f9 0%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  text-shadow: 0 0 30px rgba(255,255,255,0.12);
+}
+.subtitle {
+  letter-spacing: 6px;
+  color: var(--gold);
+  text-shadow: 0 0 12px rgba(251,191,36,0.4);
+  font-family: "Orbitron", sans-serif;
+  font-weight: 500;
+}
+
+/* HUD: premium cards with gold dividers */
+.hud {
+  gap: 0;
+  padding: 14px 6px 6px;
+  align-items: stretch;
+}
+.hud-card {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 4px 22px;
+  position: relative;
+  min-width: 92px;
+  backdrop-filter: none;
+}
+.hud-card + .hud-card::before {
+  /* vertical divider between cards */
+  content: "";
+  position: absolute;
+  left: 0; top: 18%; bottom: 18%;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(251,191,36,0.4), transparent);
+}
+.hud-label {
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.62rem;
+  letter-spacing: 3px;
+  color: var(--gold);
+  opacity: 0.85;
+}
+.hud-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  text-shadow: 0 0 14px rgba(56,189,248,0.5);
+  margin-top: 4px;
+  letter-spacing: 1px;
+}
+
+/* Reset button: tactical look */
+#resetBtn {
+  background: rgba(15, 30, 55, 0.7);
+  color: var(--ink);
+  border: 1px solid rgba(251,191,36,0.4);
+  padding: 0 18px;
+  height: 38px;
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 2px;
+  box-shadow: none;
+}
+#resetBtn:hover {
+  background: rgba(251,191,36,0.15);
+  border-color: var(--gold);
+  box-shadow: 0 0 18px rgba(251,191,36,0.3);
+  transform: translateY(-1px);
+}
+
+/* ---- Status bar: transmission look ---- */
+#status {
+  margin: 10px auto 0;
+  padding: 10px 18px;
+  max-width: 720px;
+  background: rgba(4, 14, 28, 0.6);
+  border: 1px solid rgba(56,189,248,0.18);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  font-family: "Inter", sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+#status::before {
+  content: "▸ COMMS";
+  position: absolute;
+  top: -1px; left: -1px;
+  background: var(--accent);
+  color: #062032;
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  padding: 2px 10px;
+  border-radius: 7px 0 8px 0;
+}
+#status {
+  padding-left: 78px;
+  text-align: left;
+  font-size: 0.92rem;
+  color: var(--ink);
+}
+/* scanning line */
+#status::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 30px;
+  background: linear-gradient(90deg, transparent, rgba(56,189,248,0.15), transparent);
+  animation: scanLine 4s linear infinite;
+}
+@keyframes scanLine {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(2000%); }
+}
+
+/* ---- Panel headers: corner accents + decorative line ---- */
+.panel {
+  border: 1px solid rgba(251,191,36,0.12);
+  background:
+    linear-gradient(180deg, rgba(10,22,40,0.85), rgba(10,22,40,0.6));
+}
+.panel-header {
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(251,191,36,0.18);
+  margin-bottom: 16px;
+  position: relative;
+}
+.panel-header::before {
+  content: "";
+  position: absolute;
+  left: 0; bottom: -1px;
+  width: 48px; height: 2px;
+  background: linear-gradient(90deg, var(--gold), transparent);
+}
+.panel-header h2 {
+  color: var(--gold);
+  font-size: 0.85rem;
+  letter-spacing: 4px;
+  text-shadow: 0 0 12px rgba(251,191,36,0.35);
+}
+.panel-sub {
+  color: var(--accent);
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+}
+
+/* ---- Setup panel: deployment console ---- */
+.setup-panel {
+  border: 1px solid rgba(251,191,36,0.18);
+  background:
+    linear-gradient(180deg, rgba(10,22,40,0.88), rgba(10,22,40,0.65));
+  position: relative;
+}
+.setup-panel::before {
+  content: "⚓ DEPLOYMENT CONSOLE";
+  position: absolute;
+  top: -10px; left: 22px;
+  background: var(--bg-0);
+  color: var(--gold);
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 3px;
+  padding: 2px 10px;
+  border: 1px solid rgba(251,191,36,0.4);
+  border-radius: 4px;
+}
+.setup-left h3 {
+  color: var(--gold);
+  font-size: 1rem;
+  letter-spacing: 4px;
+  text-shadow: 0 0 12px rgba(251,191,36,0.3);
+}
+
+/* ---- Ship picker: premium card chips ---- */
+.ship-picker { gap: 10px; }
+.ship-chip {
+  padding: 10px 14px;
+  background:
+    linear-gradient(180deg, rgba(15,30,55,0.9), rgba(8,18,35,0.85));
+  border: 1px solid rgba(96,165,250,0.18);
+  border-radius: 8px;
+  position: relative;
+  min-width: 145px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  overflow: hidden;
+}
+.ship-chip::before {
+  /* left accent strip */
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: rgba(96,165,250,0.3);
+  transition: background 0.2s;
+}
+.ship-chip:hover {
+  transform: translateY(-2px);
+  border-color: rgba(251,191,36,0.4);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+}
+.ship-chip:hover::before { background: var(--gold); }
+.ship-chip.selected {
+  background:
+    linear-gradient(180deg, rgba(251,191,36,0.18), rgba(245,158,11,0.08));
+  border-color: var(--gold);
+  box-shadow: 0 0 18px rgba(251,191,36,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+.ship-chip.selected::before { background: var(--gold); box-shadow: 0 0 10px var(--gold); }
+.ship-chip.selected::after {
+  content: "● SELECTED";
+  position: absolute;
+  top: 6px; right: 8px;
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.5rem;
+  letter-spacing: 1.5px;
+  color: var(--gold);
+}
+.ship-chip.placed {
+  opacity: 0.45;
+  background: rgba(8,18,35,0.5);
+}
+.ship-chip.placed::after {
+  content: "✓ DEPLOYED";
+  position: absolute;
+  top: 6px; right: 8px;
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.5rem;
+  letter-spacing: 1.5px;
+  color: var(--good);
+}
+.ship-chip-name {
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.78rem;
+  letter-spacing: 2px;
+  color: var(--ink);
+}
+.ship-chip-len {
+  font-size: 0.65rem;
+  color: var(--ink-dim);
+  letter-spacing: 1px;
+}
+.ship-chip-icon { width: 90px; height: 20px; }
+
+/* ---- Orient toggle button: tactical ---- */
+.orient-toggle > .hud-label {
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 2px;
+  color: var(--gold);
+  opacity: 0.8;
+  margin-bottom: 4px;
+}
+#rotateBtn {
+  background: rgba(4,14,28,0.7);
+  border: 1px solid rgba(251,191,36,0.3);
+  color: var(--ink);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+#rotateBtn #orientIcon {
+  color: var(--gold);
+  font-size: 1rem;
+}
+#rotateBtn:hover {
+  border-color: var(--gold);
+  background: rgba(251,191,36,0.1);
+  box-shadow: 0 0 12px rgba(251,191,36,0.25);
+}
+
+/* ---- Primary "Start Battle" button: GOLD CTA matching title ---- */
+.primary-btn {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #062032;
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 3px;
+  padding: 12px 18px;
+  text-transform: uppercase;
+  box-shadow:
+    0 0 0 1px rgba(251,191,36,0.5),
+    0 8px 24px rgba(251,191,36,0.35),
+    inset 0 1px 0 rgba(255,255,255,0.4);
+  position: relative;
+  overflow: hidden;
+}
+.primary-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 0 1px rgba(251,191,36,0.8),
+    0 12px 32px rgba(251,191,36,0.55),
+    inset 0 1px 0 rgba(255,255,255,0.4);
+}
+.primary-btn:not(:disabled)::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.5) 50%, transparent 70%);
+  transform: translateX(-100%);
+  animation: sheen 3.5s ease-in-out infinite;
+}
+
+.ghost-btn {
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  border: 1px solid rgba(96,165,250,0.25);
+}
+
+/* ---- Coordinates: military spec ---- */
+.coords-top, .coords-left {
+  color: var(--gold);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  opacity: 0.7;
+  text-shadow: 0 0 6px rgba(251,191,36,0.4);
+}
+
+/* ---- Board frame: brass plating ---- */
+.board-frame {
+  background:
+    linear-gradient(180deg, #0a1c33, #07111f);
+  border: 1px solid rgba(251,191,36,0.25);
+  box-shadow:
+    inset 0 0 0 1px rgba(251,191,36,0.08),
+    0 8px 30px rgba(0,0,0,0.5);
+  position: relative;
+}
+.board-frame::before, .board-frame::after {
+  /* corner rivets */
+  content: "";
+  position: absolute;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #fde68a, #92400e);
+  box-shadow: 0 0 4px rgba(251,191,36,0.5);
+}
+.board-frame::before { top: 4px; left: 4px; }
+.board-frame::after  { bottom: 4px; right: 4px; }
+
+/* ---- Targeting reticle on enemy hover ---- */
+#computerBoard .cell:not(.hit):not(.miss):not(.sunk):hover {
+  background: rgba(248,113,113,0.12);
+  box-shadow:
+    inset 0 0 0 1px rgba(248,113,113,0.6),
+    0 0 16px rgba(248,113,113,0.4);
+  transform: scale(1.08);
+}
+#computerBoard .cell:not(.hit):not(.miss):not(.sunk):hover::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px solid rgba(248,113,113,0.85);
+  border-radius: 50%;
+  animation: reticleSpin 2s linear infinite;
+  pointer-events: none;
+}
+#computerBoard .cell:not(.hit):not(.miss):not(.sunk):hover::after {
+  /* crosshair lines */
+  content: "+";
+  font-family: "Orbitron", monospace;
+  font-size: 22px;
+  color: rgba(248,113,113,0.95);
+  text-shadow: 0 0 8px rgba(248,113,113,0.6);
+  font-weight: 100;
+  line-height: 1;
+}
+@keyframes reticleSpin {
+  from { transform: rotate(0deg); border-style: solid; }
+  50%  { transform: rotate(180deg); border-style: dashed; }
+  to   { transform: rotate(360deg); border-style: solid; }
+}
+
+/* ---- Enemy lock overlay: dramatic ---- */
+.enemy-lock {
+  background:
+    radial-gradient(ellipse at center, rgba(127,29,29,0.2), rgba(5,11,24,0.85));
+  backdrop-filter: blur(4px);
+}
+.lock-text {
+  color: var(--gold);
+  font-size: 1rem;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  text-shadow: 0 0 16px rgba(251,191,36,0.5);
+  animation: lockPulse 2.5s ease-in-out infinite;
+}
+@keyframes lockPulse {
+  0%, 100% { opacity: 0.6; }
+  50%      { opacity: 1; }
+}
+
+/* ---- Captain chat header ---- */
+.chat-panel .panel-header {
+  position: relative;
+  padding-left: 0;
+}
+.chat-panel .panel-header h2 {
+  color: var(--bad);
+  text-shadow: 0 0 10px rgba(248,113,113,0.4);
+}
+.chat-panel .panel-header::before {
+  background: linear-gradient(90deg, var(--bad), transparent);
+}
+.chat-online {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 2px;
+  color: var(--good);
+}
+.chat-online::before {
+  content: "";
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--good);
+  box-shadow: 0 0 8px var(--good);
+  animation: dotPulse 1.8s ease-in-out infinite;
+}
+@keyframes dotPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.4; }
+}
+
+/* ---- Battle log: radar console ---- */
+.log {
+  font-family: "Orbitron", monospace;
+  font-size: 0.72rem;
+}
+.log li {
+  padding: 4px 6px;
+  border-left: 2px solid transparent;
+  position: relative;
+}
+.log li.you    { border-left-color: var(--accent); }
+.log li.enemy  { border-left-color: var(--bad); }
+.log li.sunk   { border-left-color: var(--gold); color: var(--gold); }
+.log li::before {
+  content: attr(data-time);
+  color: var(--ink-dim);
+  margin-right: 8px;
+  font-size: 0.6rem;
+  opacity: 0.6;
+}
+
+/* ---- Fleet roster: ammunition-style strip ---- */
+.fleet-roster {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(251,191,36,0.15);
+}
+
+/* ---- Setup screen: hero board layout ---- */
+body.screen-setup .panel#playerPanel {
+  max-width: 760px;
+  margin: 0 auto;
+}
+body.screen-setup main {
+  grid-template-columns: minmax(0, 1fr) 340px;
+  align-items: start;
+}
+
+/* Slight scale-up animation when board appears */
+.board-stack { animation: boardIn 0.6s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes boardIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Last-shot marker: clearer */
+.cell.last {
+  outline: 2px solid var(--gold);
+  outline-offset: -2px;
+  box-shadow: 0 0 16px rgba(251,191,36,0.6) !important;
+}
+
+/* ============================================================
+   TURN AWARENESS & BUSY-STATE FEEDBACK
+   ============================================================ */
+
+/* When a shell is in flight OR it's not the player's turn, the targeting
+   reticle should NOT appear on the enemy board — it would mislead the
+   player into thinking they can fire. */
+body.firing #computerBoard .cell:hover,
+body:not(.player-turn) #computerBoard .cell:hover {
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+body.firing #computerBoard .cell:hover::before,
+body.firing #computerBoard .cell:hover::after,
+body:not(.player-turn) #computerBoard .cell:hover::before,
+body:not(.player-turn) #computerBoard .cell:hover::after {
+  display: none !important;
+}
+
+/* Cursor state during projectile flight */
+body.firing #computerBoard,
+body.firing #computerBoard .cell { cursor: wait !important; }
+body:not(.player-turn).screen-battle #computerBoard,
+body:not(.player-turn).screen-battle #computerBoard .cell { cursor: not-allowed; }
+
+/* Subtle desaturate of the enemy board while waiting */
+body.firing #computerBoard,
+body:not(.player-turn).screen-battle #computerBoard {
+  filter: saturate(0.7) brightness(0.92);
+  transition: filter 0.25s;
+}
+
+/* ============================================================
+   FIRST-SHOT HINT — pulsing pointer above the enemy board on
+   the player's very first turn of a battle.
+   ============================================================ */
+body.first-shot #enemyPanel { position: relative; }
+body.first-shot #enemyPanel::before {
+  content: "▼ FIRE AT WILL";
+  position: absolute;
+  top: -22px; left: 50%;
+  transform: translateX(-50%);
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 4px;
+  color: var(--bad);
+  text-shadow: 0 0 12px rgba(248,113,113,0.7);
+  animation: firstShotPulse 1.4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 20;
+}
+@keyframes firstShotPulse {
+  0%, 100% { transform: translateX(-50%) translateY(0); opacity: 0.7; }
+  50%      { transform: translateX(-50%) translateY(4px); opacity: 1; }
+}
+
+/* ============================================================
+   PREMIUM END-GAME OVERLAY (matches title-screen aesthetic)
+   ============================================================ */
+.overlay {
+  background: rgba(2, 4, 10, 0.78);
+  backdrop-filter: blur(12px);
+}
+.overlay::before {
+  /* radial vignette so the card pops */
+  content: "";
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 50% 45% at 50% 50%,
+    transparent 0%, rgba(2,4,10,0.7) 100%);
+}
+.overlay-card {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(15,28,52,0.95), rgba(8,16,30,0.92));
+  border: 1px solid rgba(251,191,36,0.35);
+  border-radius: 18px;
+  padding: 44px 52px 36px;
+  max-width: 520px;
+  box-shadow:
+    0 30px 100px rgba(0,0,0,0.75),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+  animation: cardIn 0.6s cubic-bezier(.2,.7,.2,1) both;
+}
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+/* Gold corner brackets on the card */
+.overlay-card::before, .overlay-card::after {
+  content: "";
+  position: absolute;
+  width: 24px; height: 24px;
+  border: 2px solid var(--gold);
+  opacity: 0.7;
+}
+.overlay-card::before { top: 8px; left: 8px; border-right: none; border-bottom: none; }
+.overlay-card::after  { bottom: 8px; right: 8px; border-left: none; border-top: none; }
+
+.overlay-card h2 {
+  font-family: "Orbitron", sans-serif;
+  font-size: 3rem;
+  letter-spacing: 10px;
+  margin: 0 0 6px;
+  text-align: center;
+}
+.overlay-card h2.win {
+  background: linear-gradient(180deg, #fde68a 0%, #b45309 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 50px rgba(251,191,36,0.5);
+}
+.overlay-card h2.lose {
+  background: linear-gradient(180deg, #fecaca 0%, #7f1d1d 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 50px rgba(248,113,113,0.45);
+}
+.overlay-card .ov-line {
+  display: block;
+  text-align: center;
+  color: var(--ink-dim);
+  font-size: 0.95rem;
+  letter-spacing: 1px;
+  margin: 4px 0 22px;
+}
+.overlay-card .ov-stats {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0;
+  border-top: 1px solid rgba(251,191,36,0.25);
+  border-bottom: 1px solid rgba(251,191,36,0.25);
+  padding: 16px 0;
+  margin-bottom: 26px;
+}
+.overlay-card .ov-stats > div {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+}
+.overlay-card .ov-stats > div + div::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 18%; bottom: 18%;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(251,191,36,0.25), transparent);
+}
+.overlay-card .ov-stats .k {
+  font-family: "Orbitron", sans-serif;
+  font-size: 0.55rem;
+  letter-spacing: 2px;
+  color: var(--gold);
+  opacity: 0.85;
+  text-align: center;
+}
+.overlay-card .ov-stats .v {
+  font-family: "Orbitron", sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #f1f5f9;
+  text-shadow: 0 0 12px rgba(56,189,248,0.4);
+}
+#overlayBtn {
+  display: block;
+  margin: 0 auto;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #062032;
+  font-family: "Orbitron", sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 4px;
+  padding: 14px 36px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow:
+    0 0 0 1px rgba(251,191,36,0.5),
+    0 10px 28px rgba(251,191,36,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.4);
+  position: relative;
+  overflow: hidden;
+}
+#overlayBtn:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 0 1px rgba(251,191,36,0.8),
+    0 14px 36px rgba(251,191,36,0.6),
+    inset 0 1px 0 rgba(255,255,255,0.4);
+}
+#overlayBtn::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.5) 50%, transparent 70%);
+  transform: translateX(-100%);
+  animation: sheen 3.5s ease-in-out infinite;
+}
+
+@media (max-width: 540px) {
+  .overlay-card { padding: 32px 24px; }
+  .overlay-card h2 { font-size: 2rem; letter-spacing: 6px; }
+  .overlay-card .ov-stats { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .overlay-card .ov-stats > div + div::before { display: none; }
+}
+
+/* ============================================================
+   PHOTOGRAPHIC OCEAN ON THE BOARDS
+   The board now uses an aerial ocean photograph as its base layer,
+   with a dark color grade so ships/UI still read. The existing
+   animated SVG turbulence sits on top via .water-overlay.
+   ============================================================ */
+.board {
+  background:
+    /* depth fade to make ships stand out at the top */
+    linear-gradient(180deg,
+      rgba(6, 18, 40, 0.45) 0%,
+      rgba(4, 14, 32, 0.55) 50%,
+      rgba(2, 8, 20, 0.78) 100%),
+    /* real photograph of ocean from above */
+    url("https://images.unsplash.com/photo-1505142468610-359e7d316be0?auto=format&fit=crop&w=900&q=75")
+      center/cover no-repeat,
+    /* fallback gradient if the image fails to load */
+    linear-gradient(180deg, #08182f 0%, #0b2548 35%, #0a1d3a 70%, #050f1f 100%);
+}
+
+/* Subtle parallax-style slow drift to make the board's photo feel alive */
+.board {
+  background-position-y: 50%, 50%, 50%;
+  animation: oceanDrift 60s ease-in-out infinite alternate;
+}
+@keyframes oceanDrift {
+  from { background-position: 50% 45%, 50% 45%, 50% 50%; }
+  to   { background-position: 50% 55%, 50% 55%, 50% 50%; }
+}
+
+/* The wave-shimmer pseudo-elements are still on top, but let them blend
+   rather than just sit there so they harmonize with the photo */
+.board::before, .board::after { mix-blend-mode: soft-light; }
+.board::after { mix-blend-mode: screen; opacity: 0.45; }
+
+/* Boost the water-overlay slightly so caustic streaks read on the photo */
+.water-overlay { opacity: 0.85; }
+
+/* ============================================================
+   OPEN-OCEAN BOARD — clean photo, brighter water
+   ============================================================ */
+.board {
+  background:
+    /* much lighter darken — let the ocean photo breathe */
+    linear-gradient(180deg,
+      rgba(8, 24, 50, 0.18) 0%,
+      rgba(4, 14, 32, 0.30) 100%),
+    /* pure open-ocean photograph (no beach, no sand) */
+    url("https://images.unsplash.com/photo-1530053969600-caed2596d242?auto=format&fit=crop&w=900&q=75")
+      center/cover no-repeat,
+    /* fallback */
+    linear-gradient(180deg, #0e2a4f, #08182f);
+  filter: brightness(1.15) saturate(1.1);
+}
+
+/* Disable the diagonal wave-streak overlays — they read as racing stripes.
+   The animated SVG turbulence in .water-overlay already provides motion. */
+.board::before,
+.board::after {
+  content: none;
+  background: none;
+  animation: none;
+}
+
+/* ============================================================
+   3D PLAYFIELD — tilt the board like a tactical command table
+   ============================================================ */
+.board-frame {
+  /* the parent provides the perspective camera */
+  perspective: 1400px;
+  perspective-origin: 50% 110%;
+}
+.board-stack {
+  /* Tilt the playing surface away from the camera, anchored at the bottom
+     edge so the near edge stays planted and the far edge recedes. */
+  transform: rotateX(10deg);
+  transform-origin: 50% 100%;
+  transform-style: preserve-3d;
+  /* Depth shadow under the floating tilted board */
+  box-shadow:
+    0 28px 50px -20px rgba(0, 0, 0, 0.75),
+    0 14px 24px -10px rgba(0, 0, 0, 0.55);
+  /* slight rounded edge so the bevel reads as a physical plate */
+  border-radius: 4px;
+  /* Counter-act the parent .board's filter brightening on the shadow */
+  transition: transform 0.4s ease;
+}
+
+/* Light catches the top (far) edge — adds depth */
+.board-stack::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 14%;
+  background: linear-gradient(180deg, rgba(255,255,255,0.10), transparent);
+  pointer-events: none;
+  z-index: 5;
+  border-radius: 4px 4px 0 0;
+}
+/* Subtle vignette near the bottom (near edge) so it doesn't feel flat */
+.board-stack::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 110% 60% at 50% 100%,
+    transparent 30%, rgba(0,0,0,0.35) 100%);
+  pointer-events: none;
+  z-index: 5;
+  border-radius: 4px;
+}
+
+/* Make the coord labels stay flat and readable while the board tilts */
+.coords-top, .coords-left { transform: none; }
+
+/* When hovering the enemy board, lift it very slightly forward — adds the
+   feel of an interactive 3D surface */
+#enemyPanel .board-stack:hover {
+  transform: rotateX(8deg) translateZ(4px);
+}
+
+/* ============================================================
+   3D SHIPS — drop-shadow stack + gentle ocean sway
+   ============================================================ */
+.ship-sprite {
+  /* Stacked drop-shadows simulate:
+     1) a sharp rim of bottom shadow under the hull (contact line)
+     2) a soft cast shadow on the water below
+     3) a faint top highlight so the hull reads metallic */
+  filter:
+    drop-shadow(0 1px 0 rgba(0, 0, 0, 0.55))
+    drop-shadow(0 6px 8px rgba(0, 0, 0, 0.55))
+    drop-shadow(0 10px 12px rgba(0, 0, 0, 0.30));
+  transform-origin: 50% 90%;
+  animation: shipSway 5.5s ease-in-out infinite alternate;
+}
+@keyframes shipSway {
+  from { transform: rotate(-0.6deg) translateY(0.6px); }
+  to   { transform: rotate(0.7deg)  translateY(-0.6px); }
+}
+
+/* Soft elliptical water-shadow that sits *under* the ship's footprint.
+   Sized via the ship-sprite's own bounds. */
+.ship-sprite::before {
+  content: "";
+  position: absolute;
+  left: 6%; right: 6%;
+  bottom: -6px;
+  height: 10px;
+  background: radial-gradient(ellipse at center,
+    rgba(0,0,0,0.55) 0%,
+    rgba(0,0,0,0.18) 55%,
+    transparent 80%);
+  filter: blur(2px);
+  pointer-events: none;
+  z-index: -1;
+  animation: shipShadow 5.5s ease-in-out infinite alternate;
+}
+@keyframes shipShadow {
+  from { transform: scaleX(1.0)  translateY(0px); opacity: 0.85; }
+  to   { transform: scaleX(0.92) translateY(1px); opacity: 0.7; }
+}
+
+/* Vertical ships: sway around their vertical axis. The inner SVG is already
+   rotated 90deg; the outer container is what we sway. */
+.ship-sprite.vertical {
+  animation-name: shipSwayV;
+  transform-origin: 50% 50%;
+}
+@keyframes shipSwayV {
+  from { transform: rotate(-0.6deg) translateX(0.6px); }
+  to   { transform: rotate(0.7deg)  translateX(-0.6px); }
+}
+.ship-sprite.vertical::before {
+  left: -6px; right: auto; bottom: 6%; top: 6%;
+  width: 10px; height: auto;
+  background: radial-gradient(ellipse at center,
+    rgba(0,0,0,0.45) 0%,
+    rgba(0,0,0,0.15) 55%,
+    transparent 80%);
+}
+
+/* Placement ghosts should NOT sway — they're a UI affordance and the player
+   needs precise targeting feedback */
+.ship-sprite.preview {
+  animation: none !important;
+}
+.ship-sprite.preview::before { display: none; }
+
+/* When sunk, the sway slows and the cast shadow deepens */
+.ship-sprite.sunk {
+  animation: shipSink 3s ease-in-out forwards;
+}
+@keyframes shipSink {
+  from { filter: drop-shadow(0 1px 0 rgba(0,0,0,0.55))
+                 drop-shadow(0 6px 8px rgba(0,0,0,0.55))
+                 drop-shadow(0 10px 12px rgba(0,0,0,0.30))
+                 grayscale(0); opacity: 1; transform: rotate(0deg); }
+  to   { filter: drop-shadow(0 2px 0 rgba(0,0,0,0.7))
+                 drop-shadow(0 10px 16px rgba(127,29,29,0.55))
+                 grayscale(0.7); opacity: 0.55; transform: rotate(3deg) translateY(2px); }
+}

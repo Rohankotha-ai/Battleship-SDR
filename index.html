@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Battleship</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Cinematic war-scene backdrop -->
+  <div class="bg-sky"></div>
+  <div class="bg-stars"></div>
+  <div class="bg-glow"></div>
+  <div class="bg-horizon">
+    <svg viewBox="0 0 1920 220" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+      <!-- Far ship -->
+      <g transform="translate(220 110)" opacity="0.55">
+        <path d="M 0 60 L 240 60 L 270 45 L 240 30 L 0 30 Z" fill="#020611"/>
+        <rect x="80" y="14" width="80" height="18" fill="#020611"/>
+        <rect x="100" y="2" width="20" height="14" fill="#020611"/>
+        <rect x="135" y="6" width="6" height="10" fill="#020611"/>
+        <rect x="170" y="-4" width="3" height="34" fill="#020611"/>
+      </g>
+      <!-- Mid ship (large carrier silhouette) -->
+      <g transform="translate(820 80)" opacity="0.9">
+        <path d="M 0 95 L 380 95 L 430 75 L 380 55 L 0 55 Z" fill="#010409"/>
+        <rect x="120" y="40" width="260" height="18" fill="#010409"/>
+        <rect x="280" y="22" width="28" height="22" fill="#010409"/>
+        <rect x="295" y="10" width="6" height="14" fill="#010409"/>
+        <rect x="200" y="34" width="4" height="8" fill="#010409"/>
+      </g>
+      <!-- Right ship (destroyer) -->
+      <g transform="translate(1380 130)" opacity="0.7">
+        <path d="M 0 50 L 180 50 L 200 40 L 180 25 L 0 25 Z" fill="#020611"/>
+        <rect x="70" y="14" width="50" height="14" fill="#020611"/>
+        <rect x="85" y="4" width="10" height="12" fill="#020611"/>
+        <rect x="125" y="6" width="4" height="10" fill="#020611"/>
+      </g>
+    </svg>
+  </div>
+  <div class="bg-smoke">
+    <div class="smoke s1"></div>
+    <div class="smoke s2"></div>
+    <div class="smoke s3"></div>
+  </div>
+  <div class="bg-vignette"></div>
+
+  <!-- Inline SVG defs for animated ocean caustics -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <filter id="oceanTurbulence" x="0" y="0" width="100%" height="100%">
+        <feTurbulence id="turb" type="fractalNoise" baseFrequency="0.013 0.022" numOctaves="3" seed="7">
+          <animate attributeName="baseFrequency" dur="22s"
+                   values="0.013 0.022; 0.017 0.026; 0.013 0.022" repeatCount="indefinite"/>
+        </feTurbulence>
+        <feColorMatrix values="
+          0 0 0 0 0.22
+          0 0 0 0 0.55
+          0 0 0 0 0.85
+          0 0 0 0.35 -0.08"/>
+        <feComposite in2="SourceGraphic" operator="in"/>
+      </filter>
+    </defs>
+  </svg>
+
+  <!-- =============== TITLE SCREEN =============== -->
+  <section id="titleScreen" class="title-screen">
+    <div class="title-hero"></div>
+    <div class="title-hero-overlay"></div>
+    <div class="title-content">
+      <div class="title-eyebrow">⚓ NAVAL COMBAT ⚓</div>
+      <h1 class="title-logo">
+        <span class="title-logo-line">BATTLE</span>
+        <span class="title-logo-line title-logo-accent">SHIP</span>
+      </h1>
+      <p class="title-tagline">
+        Deploy your fleet. Outwit a grizzled enemy captain.<br/>
+        Sink every last vessel before yours goes down.
+      </p>
+      <button id="titleStartBtn" class="title-start">
+        <span class="title-start-inner">▶ START CAMPAIGN</span>
+        <span class="title-start-glow"></span>
+      </button>
+      <div class="title-meta">
+        <div class="title-meta-item"><span class="k">CONTROLS</span><span class="v">Click cells · Press R to rotate</span></div>
+        <div class="title-meta-item"><span class="k">FLEET</span><span class="v">5 ships</span></div>
+        <div class="title-meta-item"><span class="k">FOE</span><span class="v">Cpt. Ironbeard</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Projectile / impact layer rendered over everything -->
+  <div id="fxLayer" class="fx-layer" aria-hidden="true"></div>
+
+  <header>
+    <div class="title-row">
+      <h1>BATTLESHIP</h1>
+    </div>
+
+    <div class="hud">
+      <div class="hud-card">
+        <span class="hud-label">Turn</span>
+        <span id="turnIndicator" class="hud-value">You</span>
+      </div>
+      <div class="hud-card">
+        <span class="hud-label">Shots</span>
+        <span id="shotsCount" class="hud-value">0</span>
+      </div>
+      <div class="hud-card">
+        <span class="hud-label">Hits</span>
+        <span id="hitsCount" class="hud-value">0</span>
+      </div>
+      <div class="hud-card">
+        <span class="hud-label">Accuracy</span>
+        <span id="accuracy" class="hud-value">—</span>
+      </div>
+      <button id="muteBtn" class="icon-btn" title="Mute audio" aria-label="Toggle audio">
+        <span id="muteIcon">🔊</span>
+      </button>
+      <button id="resetBtn">⟲ New Game</button>
+    </div>
+
+    <p id="status">Deploy your fleet, Admiral.</p>
+  </header>
+
+  <section id="setupPanel" class="setup-panel">
+    <div class="setup-left">
+      <h3>Deploy Your Fleet</h3>
+      <p class="setup-hint">
+        Click a ship below, then click a cell on your board to place it.
+        Press <kbd>R</kbd> or click <strong>Rotate</strong> to toggle orientation.
+      </p>
+      <div id="shipPicker" class="ship-picker"></div>
+    </div>
+    <div class="setup-right">
+      <div class="orient-toggle">
+        <span class="hud-label">Orientation</span>
+        <button id="rotateBtn" class="ghost-btn"><span id="orientIcon">↔</span> <span id="orientLabel">Horizontal</span></button>
+      </div>
+      <button id="randomBtn" class="ghost-btn">⚄ Auto-Place</button>
+      <button id="clearBtn" class="ghost-btn">⌫ Clear</button>
+      <button id="startBtn" class="primary-btn" disabled>⚓ Start Battle</button>
+    </div>
+  </section>
+
+  <main>
+    <section class="panel" id="playerPanel">
+      <div class="panel-header">
+        <h2>Your Fleet</h2>
+        <span class="panel-sub" id="playerRemaining">5 ships</span>
+      </div>
+      <div class="board-frame">
+        <div class="coords-top">
+          <span></span>
+          <span>A</span><span>B</span><span>C</span><span>D</span><span>E</span>
+          <span>F</span><span>G</span><span>H</span><span>I</span><span>J</span>
+        </div>
+        <div class="board-row">
+          <div class="coords-left">
+            <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+            <span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+          </div>
+          <div class="board-stack">
+            <div id="playerBoard" class="board" aria-label="Player board"></div>
+            <div class="water-overlay"></div>
+            <div id="playerShipLayer" class="ship-layer"></div>
+            <div id="playerPreview" class="ship-layer preview-layer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="fleet-roster" id="playerRoster"></div>
+    </section>
+
+    <section class="panel" id="enemyPanel">
+      <div class="panel-header">
+        <h2>Enemy Waters</h2>
+        <span class="panel-sub" id="computerRemaining">5 ships</span>
+      </div>
+      <div class="board-frame">
+        <div class="coords-top">
+          <span></span>
+          <span>A</span><span>B</span><span>C</span><span>D</span><span>E</span>
+          <span>F</span><span>G</span><span>H</span><span>I</span><span>J</span>
+        </div>
+        <div class="board-row">
+          <div class="coords-left">
+            <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+            <span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>
+          </div>
+          <div class="board-stack">
+            <div id="computerBoard" class="board" aria-label="Computer board"></div>
+            <div class="water-overlay"></div>
+            <div id="computerShipLayer" class="ship-layer"></div>
+            <div id="enemyLock" class="enemy-lock">
+              <div class="lock-text">⚠ SIGNAL LOCKED<br/><span style="font-size:0.7rem;letter-spacing:2px;color:var(--ink-dim);text-shadow:none;">Awaiting fleet deployment</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="fleet-roster" id="computerRoster"></div>
+    </section>
+
+    <aside class="sidebar">
+      <section class="panel chat-panel">
+        <div class="panel-header">
+          <h2>Captain Comms</h2>
+          <span class="chat-online">CPT. IRONBEARD · ONLINE</span>
+        </div>
+        <ul id="chat" class="chat"></ul>
+      </section>
+
+      <section class="panel log-panel">
+        <div class="panel-header">
+          <h2>Battle Log</h2>
+        </div>
+        <ul id="log" class="log"></ul>
+      </section>
+    </aside>
+  </main>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+
+  <div id="overlay" class="overlay hidden">
+    <div class="overlay-card">
+      <h2 id="overlayTitle"></h2>
+      <p id="overlayText"></p>
+      <button id="overlayBtn">Play Again</button>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
