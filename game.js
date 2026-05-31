@@ -607,10 +607,15 @@ function renderPreview(r, c, length, horizontal, valid) {
   const layer = document.getElementById("playerPreview");
   layer.innerHTML = "";
   if (r == null) return;
-  // Clamp so it stays in bounds for visual
+  // Clamp anchor so the preview stays within the grid visually
+  let cr = r, cc = c;
+  if (horizontal && cc + length > SIZE) cc = SIZE - length;
+  if (!horizontal && cr + length > SIZE) cr = SIZE - length;
+  if (cr < 0) cr = 0;
+  if (cc < 0) cc = 0;
   const fakeShip = {
     name: SHIPS[selectedShipIdx].name,
-    length, horizontal, anchor: [r, c], cells: [], hits: 0,
+    length, horizontal, anchor: [cr, cc], cells: [], hits: 0,
   };
   const sprite = makeShipSprite(fakeShip);
   sprite.classList.add("preview", valid ? "valid" : "invalid");
@@ -974,7 +979,32 @@ async function computerFire() {
       setStatus(`<span class="accent">Enemy sunk your ${res.ship.name}!</span>`);
       chatSay("enemySink");
       announceSink({ playerSunkEnemy: false, shipName: res.ship.name });
-      ai = makeAi();
+      // Remove hits belonging to the sunk ship; keep hits on other ships
+      const sunkCells = new Set(res.ship.cells.map(([sr, sc]) => `${sr},${sc}`));
+      ai.hits = ai.hits.filter(([hr, hc]) => !sunkCells.has(`${hr},${hc}`));
+      if (ai.hits.length > 0) {
+        // Still tracking another ship — rebuild the target queue from remaining hits
+        ai.targetQueue = [];
+        ai.orientation = null;
+        if (ai.hits.length >= 2) {
+          const [r0, c0] = ai.hits[0];
+          const rLast = ai.hits[ai.hits.length - 1][0];
+          ai.orientation = (r0 === rLast) ? "h" : "v";
+          const rows = ai.hits.map(h => h[0]);
+          const cols = ai.hits.map(h => h[1]);
+          if (ai.orientation === "h") {
+            ai.targetQueue.push([r0, Math.min(...cols) - 1], [r0, Math.max(...cols) + 1]);
+          } else {
+            ai.targetQueue.push([Math.min(...rows) - 1, c0], [Math.max(...rows) + 1, c0]);
+          }
+        } else {
+          const [hr, hc] = ai.hits[0];
+          ai.targetQueue.push([hr-1, hc], [hr+1, hc], [hr, hc-1], [hr, hc+1]);
+          shuffle(ai.targetQueue);
+        }
+      } else {
+        ai = makeAi();
+      }
     } else {
       log("enemy", `${cName} — Hit`);
       setStatus(`<span class="accent">Enemy hit your ${res.ship.name}!</span>`);
@@ -1266,7 +1296,10 @@ document.addEventListener("click", e => {
 });
 
 document.getElementById("resetBtn").addEventListener("click", () => resetAll());
-document.getElementById("overlayBtn").addEventListener("click", () => resetAll());
+document.getElementById("overlayBtn").addEventListener("click", () => {
+  resetAll();
+  startSetup();
+});
 document.getElementById("titleStartBtn").addEventListener("click", () => {
   audio.click();
   startSetup();
