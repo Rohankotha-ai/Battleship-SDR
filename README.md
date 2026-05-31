@@ -4,7 +4,7 @@ A single-player Battleship game playable in the browser against an AI opponent (
 
 ## Play Online
 
-**[Play the game here](https://battleship-sdr.netlify.app)**
+**[Play the game here](https://battleship-sdr-vdtcnlgg.devinapps.com)**
 
 ## Features
 
