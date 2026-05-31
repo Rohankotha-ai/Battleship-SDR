@@ -1295,7 +1295,10 @@ document.addEventListener("click", e => {
   if (rc) playerFire(rc[0], rc[1]);
 });
 
-document.getElementById("resetBtn").addEventListener("click", () => resetAll());
+document.getElementById("resetBtn").addEventListener("click", () => {
+  resetAll();
+  startSetup();
+});
 document.getElementById("overlayBtn").addEventListener("click", () => {
   resetAll();
   startSetup();
